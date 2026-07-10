@@ -11,6 +11,54 @@
 <link rel="stylesheet" href="_ds/michelle-brideau-design-system-89a0beb8-7f63-4672-964f-4db09d5ccd45/styles.css">
 <script src="_ds/michelle-brideau-design-system-89a0beb8-7f63-4672-964f-4db09d5ccd45/_ds_bundle.js"></script>
 <script src="./deck-stage.js"></script>
+<script>
+// Presenter helpers for the standalone deck:
+//   T — toggle the thumbnail rail (left column)
+//   N — toggle speaker notes for the current slide
+(function () {
+  var notesBox = null;
+  function currentNotes() {
+    var slides = document.querySelectorAll('deck-stage > section');
+    if (!slides.length) return '';
+    var i = Math.max(1, parseInt(location.hash.slice(1), 10) || 1) - 1;
+    var s = slides[Math.min(i, slides.length - 1)];
+    return s.getAttribute('data-speaker-notes') || '(no notes for this slide)';
+  }
+  function refreshNotes() {
+    if (notesBox && notesBox.style.display !== 'none') notesBox.textContent = currentNotes();
+  }
+  // deck-stage updates the hash via replaceState (no hashchange event) and
+  // posts {slideIndexChanged} — listen for that, with a poll as safety net.
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.slideIndexChanged === 'number') refreshNotes();
+  });
+  setInterval(refreshNotes, 400);
+  window.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    var stage = document.querySelector('deck-stage');
+    if (!stage) return;
+    if (e.key === 't' || e.key === 'T') {
+      if (stage.hasAttribute('no-rail')) stage.removeAttribute('no-rail');
+      else stage.setAttribute('no-rail', '');
+      e.preventDefault();
+    } else if (e.key === 'n' || e.key === 'N') {
+      if (!notesBox) {
+        notesBox = document.createElement('div');
+        notesBox.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;' +
+          'background:rgba(10,8,16,0.92);color:#f5f0ff;padding:18px 28px;' +
+          'font:400 18px/1.5 "DM Sans",system-ui,sans-serif;max-height:30vh;overflow:auto;' +
+          'border-top:3px solid #e91e8c;display:none;';
+        document.body.appendChild(notesBox);
+      }
+      notesBox.style.display = notesBox.style.display === 'none' ? 'block' : 'none';
+      refreshNotes();
+      e.preventDefault();
+    }
+  });
+})();
+</script>
 <style>
 :root{
   --type-title: 68px;
