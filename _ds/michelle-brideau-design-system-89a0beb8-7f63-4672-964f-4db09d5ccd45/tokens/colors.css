@@ -1,0 +1,127 @@
+/* ============================================================
+   COLORS — Michelle Brideau / Flow Metrics palette
+   Signature: deep purple + hot pink, lime-green support.
+   Base ramps + semantic aliases live on :root (the default,
+   light/web theme). Slide & section themes are class scopes.
+   ============================================================ */
+
+:root {
+  /* ---- Brand accents (constant across every theme) ---- */
+  --c-pink:        #e91e8c;   /* hot pink — primary accent      */
+  --c-pink-dim:    #b5156c;   /* muted pink — bars, fills, hover */
+  --c-pink-deep:   #8a0f52;   /* pressed / deep fill            */
+  --c-lime:        #7cb342;   /* lime green — secondary / positive */
+  --c-lime-dim:    #5f8c32;   /* lime hover / pressed           */
+
+  /* ---- Purple ramp (signature surface family) ---- */
+  --c-purple-900:  #2e0857;
+  --c-purple-800:  #3a0a68;
+  --c-purple-700:  #4e1280;
+  --c-purple-600:  #5a1a90;
+  --c-purple-100:  #f3ecff;   /* faint purple tint on light bg  */
+
+  /* ---- Warm neutrals (paper / ink) ---- */
+  --c-paper:       #f7f6f2;   /* warm off-white page            */
+  --c-paper-2:     #efece4;   /* sunken / alt surface           */
+  --c-card:        #ffffff;
+  --c-line:        #e3dfd6;   /* hairline border on light       */
+  --c-line-strong: #cfc9bd;
+  --c-ink:         #1a1c26;   /* near-black body ink            */
+  --c-ink-2:       #3a3d4a;
+  --c-muted:       #6a6e80;   /* muted body / captions          */
+  --c-faint:       #9a9eb0;   /* meta / timestamps              */
+
+  /* ---- Semantic state ---- */
+  --c-danger:      oklch(60% 0.18 22);   /* over-SLA / alerts   */
+  --c-warn:        oklch(76% 0.15 75);
+  --c-ok:          var(--c-lime);
+
+  /* ============================================================
+     SEMANTIC ALIASES — default (light / web) theme
+     Components reference THESE, not the raw ramp above.
+     ============================================================ */
+  --bg-page:       var(--c-paper);
+  --bg-sunken:     var(--c-paper-2);
+  --surface-card:  var(--c-card);
+  --surface-edge:  var(--c-line);
+  --surface-edge-strong: var(--c-line-strong);
+
+  --text-heading:  var(--c-ink);
+  --text-body:     var(--c-ink-2);
+  --text-muted:    var(--c-muted);
+  --text-faint:    var(--c-faint);
+  --text-on-accent:#ffffff;
+
+  --accent:        var(--c-pink);
+  --accent-hover:  var(--c-pink-dim);
+  --accent-press:  var(--c-pink-deep);
+  --accent-soft:   color-mix(in oklch, var(--c-pink) 12%, transparent);
+  --support:       var(--c-lime);
+  --support-soft:  color-mix(in oklch, var(--c-lime) 16%, transparent);
+
+  --ghost-stroke:  var(--c-line-strong);  /* large outlined display text */
+
+  --focus-ring:    color-mix(in oklch, var(--c-pink) 55%, transparent);
+}
+
+/* ============================================================
+   SLIDE / SECTION THEMES
+   Set one of these classes on a wrapper to repaint surface +
+   text. Accents stay constant so the brand reads consistently.
+   ============================================================ */
+
+/* ---- VIVID — purple & hot pink (signature deck look) ---- */
+.theme-vivid {
+  --bg-page:       var(--c-purple-800);
+  --bg-sunken:     var(--c-purple-900);
+  --surface-card:  var(--c-purple-900);
+  --surface-edge:  var(--c-purple-600);
+  --surface-edge-strong: var(--c-purple-600);
+  --text-heading:  #f5f0ff;
+  --text-body:     #e7d9fb;
+  --text-muted:    #c9aded;
+  --text-faint:    #a47fd0;
+  --ghost-stroke:  #ffffff;
+}
+
+/* ---- DARK — charcoal ---- */
+.theme-dark {
+  --bg-page:       #111318;
+  --bg-sunken:     #0c0e13;
+  --surface-card:  #181b28;
+  --surface-edge:  #2a2d3e;
+  --surface-edge-strong: #3a3e52;
+  --text-heading:  #edecea;
+  --text-body:     #cdd0db;
+  --text-muted:    #8b8fa8;
+  --text-faint:    #62667e;
+  --ghost-stroke:  #2e3248;
+}
+
+/* ---- LIGHT — warm off-white (same family as :root, scoped) ---- */
+.theme-light {
+  --bg-page:       var(--c-paper);
+  --bg-sunken:     var(--c-paper-2);
+  --surface-card:  var(--c-card);
+  --surface-edge:  var(--c-line);
+  --surface-edge-strong: var(--c-line-strong);
+  --text-heading:  var(--c-ink);
+  --text-body:     var(--c-ink-2);
+  --text-muted:    var(--c-muted);
+  --text-faint:    var(--c-faint);
+  --ghost-stroke:  var(--c-line-strong);
+}
+
+/* ---- SLATE — cool blue-grey ---- */
+.theme-slate {
+  --bg-page:       #1e2a3a;
+  --bg-sunken:     #18222f;
+  --surface-card:  #1a2638;
+  --surface-edge:  #2d4060;
+  --surface-edge-strong: #3a5278;
+  --text-heading:  #e8edf4;
+  --text-body:     #c4cedb;
+  --text-muted:    #7a91aa;
+  --text-faint:    #586d85;
+  --ghost-stroke:  #2d4060;
+}
