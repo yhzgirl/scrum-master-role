@@ -16,6 +16,8 @@
 //   T — toggle the thumbnail rail (left column)
 //   N — toggle speaker notes for the current slide
 (function () {
+  if (window.__deckPresenterBound) return;
+  window.__deckPresenterBound = true;
   var notesBox = null;
   function currentNotes() {
     var slides = document.querySelectorAll('deck-stage > section');
@@ -80,7 +82,43 @@ body{ margin:0; background:#15081f; }
 .chip{ width:28px; height:28px; border-radius:8px; background:#e91e8c; color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:700; font-size:13px; }
 .mb{ display:flex; align-items:center; gap:11px; }
 .ghost{ position:absolute; font-weight:700; letter-spacing:-10px; line-height:1; color:transparent; -webkit-text-stroke:2px rgba(255,255,255,0.14); user-select:none; }
+.reveal{ opacity:0; transform:translateY(22px); transition:opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1); }
+.reveal.on{ opacity:1; transform:none; }
+@media print{ .reveal{ opacity:1 !important; transform:none !important; } }
 </style>
+<script>
+// Stepped reveals: on a slide containing .reveal elements, ArrowDown shows
+// the next one (with animation), ArrowUp hides the last shown one.
+(function () {
+  if (window.__deckRevealBound) return;
+  window.__deckRevealBound = true;
+  function revealEls() {
+    var slides = document.querySelectorAll('deck-stage > section');
+    if (!slides.length) return [];
+    var i = Math.max(1, parseInt(location.hash.slice(1), 10) || 1) - 1;
+    var s = slides[Math.min(i, slides.length - 1)];
+    return Array.prototype.slice.call(s.querySelectorAll('.reveal'));
+  }
+  window.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    var els = revealEls();
+    if (!els.length) return;
+    if (e.key === 'ArrowDown') {
+      for (var i = 0; i < els.length; i++) {
+        if (!els[i].classList.contains('on')) { els[i].classList.add('on'); break; }
+      }
+    } else {
+      for (var j = els.length - 1; j >= 0; j--) {
+        if (els[j].classList.contains('on')) { els[j].classList.remove('on'); break; }
+      }
+    }
+    e.preventDefault();
+  });
+})();
+</script>
 </helmet>
 <x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
 
@@ -159,26 +197,35 @@ body{ margin:0; background:#15081f; }
   </div>
 </section>
 
-<!-- 4. WHAT A SCRUM MASTER DOESN'T DO (myth vs reality, light) -->
-<section class="slide" data-label="What a Scrum Master Doesn't Do" data-speaker-notes="Go through each common misconception and the actual reality: this is often the most eye-opening slide for stakeholders." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<!-- 4. COMMON MISCONCEPTIONS (stepped reveal, light) -->
+<section class="slide" data-label="Common Misconceptions" data-speaker-notes="Stepped reveal: press ↓ to bring on each misconception, ↓ again for its reality; ↑ steps back. Ask the room which ones they recognise before revealing the realities." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
   <span class="eyebrow">THE MYTHS</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">What a Scrum Master doesn't do</h1>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px 56px; margin-top:56px; flex-grow:1;">
-    <div style="font-family:var(--font-mono); font-size:20px; letter-spacing:0.1em; text-transform:uppercase; color:#9a9d90; padding-bottom:16px; border-bottom:2px solid #e3dfd6;">Common misconception</div>
-    <div style="font-family:var(--font-mono); font-size:20px; letter-spacing:0.1em; text-transform:uppercase; color:#e91e8c; padding-bottom:16px; border-bottom:2px solid #e3dfd6;">Reality</div>
+  <h1 style="margin:24px 0 0; font-size:56px; font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">Common misconceptions about Scrum Masters</h1>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0 56px; margin-top:36px; flex-grow:1; align-content:start;">
+    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:#9a9d90; padding-bottom:12px; border-bottom:2px solid #e3dfd6;">The misconception</div>
+    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:#e91e8c; padding-bottom:12px; border-bottom:2px solid #e3dfd6;">The reality</div>
 
-    <div style="font-size:var(--type-body); font-weight:500; color:#1a1c26; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">Takes notes and tracks status for the team</div>
-    <div style="font-size:var(--type-body); font-weight:300; color:#6a6e80; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">Makes the work visible so the team can track its own status</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're just a project manager with a new title</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">No assigning tasks or tracking deadlines — the team owns its commitments; the Scrum Master facilitates the process</div>
 
-    <div style="font-size:var(--type-body); font-weight:500; color:#1a1c26; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">Assigns tasks and chases people for updates</div>
-    <div style="font-size:var(--type-body); font-weight:300; color:#6a6e80; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">The team pulls its own work; the Scrum Master has no authority to assign it</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They run the sprint</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The team plans and runs the sprint — the Scrum Master removes blockers and keeps events useful, but doesn't direct the work</div>
 
-    <div style="font-size:var(--type-body); font-weight:500; color:#1a1c26; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">Books meetings and manages the team's calendar</div>
-    <div style="font-size:var(--type-body); font-weight:300; color:#6a6e80; padding:22px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center;">Protects the calendar by helping the team decide what deserves a meeting</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're admin support for meetings</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The real job is coaching the team on agile practices and protecting focus, not admin work</div>
 
-    <div style="font-size:var(--type-body); font-weight:500; color:#1a1c26; padding:22px 0; display:flex; align-items:center;">Enforces every ceremony and artifact by the book</div>
-    <div style="font-size:var(--type-body); font-weight:300; color:#6a6e80; padding:22px 0; display:flex; align-items:center;">Adapts practices to what this team actually needs to deliver well</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They report on the team to management</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">Policing velocity or reporting failures upward would undermine trust and turn the role into surveillance</div>
+
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're only needed during the sprint</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The job spans coaching, removing organisational obstacles, and improving team dynamics over time — well beyond the events</div>
+
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They make final decisions</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">Product decisions belong to the Product Owner; technical decisions belong to the developers — the Scrum Master has authority over neither</div>
+
+    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; display:flex; align-items:center; line-height:1.35;">Anyone can do it as a side task</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; display:flex; align-items:center; line-height:1.35;">Facilitating well, coaching a team and spotting dysfunction take real skill — as a spare-time add-on, the role gets neglected</div>
   </div>
   <div class="foot" style="color:#9a9d90;">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
