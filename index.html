@@ -73,18 +73,46 @@
   --gap-title: 44px;
   --gap-item: 28px;
 }
-body{ margin:0; background:#15081f; }
+body{ margin:0; background:var(--sm-page-bg); }
 .slide{ font-family: var(--font-sans); overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; }
 .slide *{ box-sizing:border-box; }
-.eyebrow{ font-size:22px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:#e91e8c; }
-.rule{ width:72px; height:4px; border-radius:2px; background:#e91e8c; margin-top:18px; }
+.eyebrow{ font-size:22px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--sm-accent); }
+.rule{ width:72px; height:4px; border-radius:2px; background:var(--sm-accent); margin-top:18px; }
 .foot{ position:absolute; left:var(--pad-x); right:var(--pad-x); bottom:48px; display:flex; align-items:center; justify-content:space-between; font-family:var(--font-mono); font-size:16px; letter-spacing:0.04em; }
-.chip{ width:28px; height:28px; border-radius:8px; background:#e91e8c; color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:700; font-size:13px; }
+.chip{ width:28px; height:28px; border-radius:8px; background:var(--sm-accent); color:var(--sm-on-accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:700; font-size:13px; }
 .mb{ display:flex; align-items:center; gap:11px; }
 .ghost{ position:absolute; font-weight:700; letter-spacing:-10px; line-height:1; color:transparent; -webkit-text-stroke:2px rgba(255,255,255,0.14); user-select:none; }
 .reveal{ opacity:0; transform:translateY(22px); transition:opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1); }
 .reveal.on{ opacity:1; transform:none; }
 @media print{ .reveal{ opacity:1 !important; transform:none !important; } }
+
+/* ===== Themeable brand tokens (toggle: Michelle / Benefact) ===== */
+:root{
+  --sm-page-bg:#15081f;
+  --sm-v-bg:#3a0a68; --sm-v-head:#f5f0ff; --sm-v-body:#e7d9fb; --sm-v-foot:#a47fd0; --sm-v-card-body:#c9b8e8;
+  --sm-paper:#f7f6f2; --sm-ink:#1a1c26; --sm-muted:#6a6e80; --sm-foot-light:#9a9d90; --sm-line:#e3dfd6;
+  --sm-dark-bg:#111318; --sm-dark-head:#edecea; --sm-dark-body:#8b8fa8; --sm-dark-foot:#4a4d60;
+  --sm-accent-dark:#e91e8c; --sm-accent-light:#e91e8c;
+  --sm-on-accent-dark:#ffffff; --sm-on-accent-light:#ffffff;
+  --sm-accent-soft:#f06bb5;
+  --sm-badge2:#5f8c32; --sm-badge2-base:#7cb342; --sm-badge3:#4e1280;
+}
+:root[data-theme="benefact"]{
+  --sm-page-bg:#012a31;
+  --sm-v-bg:#024450; --sm-v-head:#eef5f4; --sm-v-body:#cfe3e2; --sm-v-foot:#7fa7a8; --sm-v-card-body:#b6cfce;
+  --sm-paper:#eef2f1; --sm-ink:#141414; --sm-muted:#4c5b5c; --sm-foot-light:#8b9a9a; --sm-line:#d6dedd;
+  --sm-dark-bg:#141414; --sm-dark-head:#eef2f1; --sm-dark-body:#9aa9a9; --sm-dark-foot:#5b6a6a;
+  --sm-accent-dark:#cda53c; --sm-accent-light:#024450;
+  --sm-on-accent-dark:#141414; --sm-on-accent-light:#ffffff;
+  --sm-accent-soft:#e3c874;
+  --sm-badge2:#006e6e; --sm-badge2-base:#14957a; --sm-badge3:#966a13;
+}
+.slide{ --sm-accent:var(--sm-accent-light); --sm-on-accent:var(--sm-on-accent-light); }
+.slide[data-mode="dark"]{ --sm-accent:var(--sm-accent-dark); --sm-on-accent:var(--sm-on-accent-dark); }
+#sm-theme-toggle{ position:fixed; top:14px; right:16px; z-index:100000; font-family:var(--font-mono,monospace); font-size:13px; letter-spacing:0.02em; padding:8px 14px 8px 12px; border-radius:999px; border:1px solid rgba(127,127,127,0.5); background:rgba(20,20,20,0.55); color:#fff; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+#sm-theme-toggle:hover{ border-color:rgba(255,255,255,0.85); }
+#sm-theme-toggle .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--sm-accent-dark); margin-right:8px; vertical-align:middle; }
+@media print{ #sm-theme-toggle{ display:none !important; } }
 </style>
 <script>
 // Stepped reveals: on a slide containing .reveal elements, ArrowDown shows
@@ -119,230 +147,290 @@ body{ margin:0; background:#15081f; }
   });
 })();
 </script>
+<script>
+// Brand theme toggle: swaps Michelle (purple/pink) <-> Benefact (green/gold).
+// Button top-right; press B to toggle; choice persisted in localStorage.
+(function () {
+  if (window.__smThemeBound) return;
+  window.__smThemeBound = true;
+  var saved = 'michelle';
+  try { saved = localStorage.getItem('deck-theme') || 'michelle'; } catch (e) {}
+  function apply(t) {
+    if (t === 'benefact') document.documentElement.setAttribute('data-theme', 'benefact');
+    else document.documentElement.removeAttribute('data-theme');
+    var lbl = document.querySelector('#sm-theme-toggle .lbl');
+    if (lbl) lbl.textContent = (t === 'benefact') ? 'Benefact' : 'Michelle';
+  }
+  function current() {
+    return document.documentElement.getAttribute('data-theme') === 'benefact' ? 'benefact' : 'michelle';
+  }
+  function toggle() {
+    var next = current() === 'benefact' ? 'michelle' : 'benefact';
+    apply(next);
+    try { localStorage.setItem('deck-theme', next); } catch (e) {}
+  }
+  var presenting = false;
+  function updateVisibility() {
+    var btn = document.getElementById('sm-theme-toggle');
+    if (btn) btn.style.display = presenting ? 'none' : '';
+  }
+  function setPresenting(on) { presenting = !!on; updateVisibility(); }
+  function ensureBtn() {
+    if (!document.getElementById('sm-theme-toggle')) {
+      if (!document.body) return;
+      var b = document.createElement('button');
+      b.id = 'sm-theme-toggle';
+      b.type = 'button';
+      b.innerHTML = '<span class="dot"></span>Brand: <span class="lbl"></span>';
+      b.addEventListener('click', toggle);
+      document.body.appendChild(b);
+      apply(current());
+    }
+    updateVisibility();
+  }
+  apply(saved);
+  ensureBtn();
+  // Re-add if the deck runtime replaces the body after mount.
+  setInterval(ensureBtn, 1000);
+  // Hide the button while presenting: browser fullscreen (standalone) or a
+  // host-posted present flag. It is also hidden in print via CSS.
+  document.addEventListener('fullscreenchange', function () { setPresenting(!!document.fullscreenElement); });
+  document.addEventListener('webkitfullscreenchange', function () { setPresenting(!!document.webkitFullscreenElement); });
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.__omelette_presenting === 'boolean') setPresenting(e.data.__omelette_presenting);
+  });
+  window.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'b' || e.key === 'B') { toggle(); e.preventDefault(); }
+  });
+})();
+</script>
 </helmet>
 <x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
 
 <!-- 1. TITLE (vivid) -->
-<section class="slide" data-label="Title" data-speaker-notes="Set up the session: we're going to reset expectations on the Scrum Master role and explain the framework-agnostic approach." style="background:#3a0a68; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
+<section class="slide" data-mode="dark" data-label="Title" data-speaker-notes="Set up the session: we're going to reset expectations on the Scrum Master role and explain the framework-agnostic approach." style="background:var(--sm-v-bg); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
   <div class="ghost" style="right:-60px; top:70px; font-size:340px;">SCRUM</div>
   <div style="position:relative; max-width:1300px;">
-    <span class="eyebrow" style="color:#f06bb5;">AGILE DELIVERY · ROLE BRIEFING</span>
+    <span class="eyebrow" style="color:var(--sm-accent-soft);">AGILE DELIVERY · ROLE BRIEFING</span>
     <div class="rule"></div>
-    <h1 style="margin:36px 0 0; font-size:96px; font-weight:600; letter-spacing:-0.025em; line-height:1.06; color:#f5f0ff;">What a Scrum<br>Master actually does.</h1>
-    <p style="margin:32px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:#e7d9fb; max-width:980px;">The role, the myths, and why the right fit for the team matters more than following one framework to the letter.</p>
+    <h1 style="margin:36px 0 0; font-size:96px; font-weight:600; letter-spacing:-0.025em; line-height:1.06; color:var(--sm-v-head);">What a Scrum<br>Master actually does.</h1>
+    <p style="margin:32px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:var(--sm-v-body); max-width:980px;">The role, the myths, and why the right fit for the team matters more than following one framework to the letter.</p>
   </div>
-  <div class="foot" style="color:#a47fd0;">
+  <div class="foot" style="color:var(--sm-v-foot);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>01 / 09</span>
   </div>
 </section>
 
 <!-- 2. AGENDA (light) -->
-<section class="slide" data-label="Agenda" data-speaker-notes="Preview the four beats of the talk." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<section class="slide" data-mode="light" data-label="Agenda" data-speaker-notes="Preview the four beats of the talk." style="background:var(--sm-paper); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:var(--sm-ink);">
   <span class="eyebrow">AGENDA</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">What we'll cover</h1>
+  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:var(--sm-ink);">What we'll cover</h1>
   <div style="display:flex; flex-direction:column; gap:0; margin-top:64px; flex-grow:1;">
-    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="font-family:var(--font-mono); font-size:36px; color:#e91e8c; width:80px;">01</span>
-      <span style="font-size:var(--type-subtitle); font-weight:500; color:#1a1c26;">What a Scrum Master does</span>
+    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="font-family:var(--font-mono); font-size:36px; color:var(--sm-accent); width:80px;">01</span>
+      <span style="font-size:var(--type-subtitle); font-weight:500; color:var(--sm-ink);">What a Scrum Master does</span>
     </div>
-    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="font-family:var(--font-mono); font-size:36px; color:#e91e8c; width:80px;">02</span>
-      <span style="font-size:var(--type-subtitle); font-weight:500; color:#1a1c26;">What a Scrum Master doesn't do</span>
+    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="font-family:var(--font-mono); font-size:36px; color:var(--sm-accent); width:80px;">02</span>
+      <span style="font-size:var(--type-subtitle); font-weight:500; color:var(--sm-ink);">What a Scrum Master doesn't do</span>
     </div>
-    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="font-family:var(--font-mono); font-size:36px; color:#e91e8c; width:80px;">03</span>
-      <span style="font-size:var(--type-subtitle); font-weight:500; color:#1a1c26;">Why we don't run Scrum by the book</span>
+    <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="font-family:var(--font-mono); font-size:36px; color:var(--sm-accent); width:80px;">03</span>
+      <span style="font-size:var(--type-subtitle); font-weight:500; color:var(--sm-ink);">Why we don't run Scrum by the book</span>
     </div>
     <div style="display:flex; align-items:baseline; gap:40px; padding:34px 0;">
-      <span style="font-family:var(--font-mono); font-size:36px; color:#e91e8c; width:80px;">04</span>
-      <span style="font-size:var(--type-subtitle); font-weight:500; color:#1a1c26;">The Team Agile Coach approach</span>
+      <span style="font-family:var(--font-mono); font-size:36px; color:var(--sm-accent); width:80px;">04</span>
+      <span style="font-size:var(--type-subtitle); font-weight:500; color:var(--sm-ink);">The Team Agile Coach approach</span>
     </div>
   </div>
-  <div class="foot" style="color:#9a9d90;">
+  <div class="foot" style="color:var(--sm-foot-light);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>02 / 09</span>
   </div>
 </section>
 
 <!-- 3. WHAT A SCRUM MASTER DOES (three-up light) -->
-<section class="slide" data-label="What a Scrum Master Does" data-speaker-notes="Walk through the three core accountabilities: coaching, facilitation, removing impediments." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<section class="slide" data-mode="light" data-label="What a Scrum Master Does" data-speaker-notes="Walk through the three core accountabilities: coaching, facilitation, removing impediments." style="background:var(--sm-paper); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:var(--sm-ink);">
   <span class="eyebrow">THE ROLE</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">What a Scrum Master does</h1>
+  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:var(--sm-ink);">What a Scrum Master does</h1>
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:36px; flex-grow:1; margin-top:60px;">
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#e91e8c; background:color-mix(in oklch, #e91e8c 14%, transparent);">Coach</span>
-      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">Coaches the team</h3>
-      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:#6a6e80; flex-grow:1;">Helps the team see how it works, question its own habits, and get better at solving its own problems.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-accent); background:color-mix(in oklch, var(--sm-accent) 14%, transparent);">Coach</span>
+      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">Coaches the team</h3>
+      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:var(--sm-muted); flex-grow:1;">Helps the team see how it works, question its own habits, and get better at solving its own problems.</p>
     </div>
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#5f8c32; background:color-mix(in oklch, #7cb342 18%, transparent);">Enable</span>
-      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">Makes sure the events happen</h3>
-      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:#6a6e80; flex-grow:1;">Ensures planning, reviews and retros take place and stay useful; the team runs them, not the Scrum Master. Steps in to facilitate a deeper dive or a one-off session when it's genuinely needed, not every meeting by default.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-badge2); background:color-mix(in oklch, var(--sm-badge2-base) 18%, transparent);">Enable</span>
+      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">Makes sure the events happen</h3>
+      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:var(--sm-muted); flex-grow:1;">Ensures planning, reviews and retros take place and stay useful; the team runs them, not the Scrum Master. Steps in to facilitate a deeper dive or a one-off session when it's genuinely needed, not every meeting by default.</p>
     </div>
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#4e1280; background:color-mix(in oklch, #4e1280 12%, transparent);">Protect</span>
-      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">Removes what's in the way</h3>
-      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:#6a6e80; flex-grow:1;">Surfaces and clears blockers, dependencies and organizational noise so the team can focus on the work.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-badge3); background:color-mix(in oklch, var(--sm-badge3) 12%, transparent);">Protect</span>
+      <h3 style="margin:26px 0 10px; font-size:34px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">Removes what's in the way</h3>
+      <p style="margin:0; font-size:var(--type-body); line-height:1.5; color:var(--sm-muted); flex-grow:1;">Surfaces and clears blockers, dependencies and organizational noise so the team can focus on the work.</p>
     </div>
   </div>
-  <div class="foot" style="color:#9a9d90;">
+  <div class="foot" style="color:var(--sm-foot-light);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>03 / 09</span>
   </div>
 </section>
 
 <!-- 4. COMMON MISCONCEPTIONS (stepped reveal, light) -->
-<section class="slide" data-label="Common Misconceptions" data-speaker-notes="Stepped reveal: press ↓ to bring on each misconception, ↓ again for its reality; ↑ steps back. Ask the room which ones they recognise before revealing the realities." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<section class="slide" data-mode="light" data-label="Common Misconceptions" data-speaker-notes="Stepped reveal: press ↓ to bring on each misconception, ↓ again for its reality; ↑ steps back. Ask the room which ones they recognise before revealing the realities." style="background:var(--sm-paper); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:var(--sm-ink);">
   <span class="eyebrow">THE MYTHS</span>
   <div class="rule"></div>
-  <h1 style="margin:24px 0 0; font-size:56px; font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">Common misconceptions about Scrum Masters</h1>
+  <h1 style="margin:24px 0 0; font-size:56px; font-weight:600; letter-spacing:-0.025em; color:var(--sm-ink);">Common misconceptions about Scrum Masters</h1>
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:0 56px; margin-top:36px; flex-grow:1; align-content:start;">
-    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:#9a9d90; padding-bottom:12px; border-bottom:2px solid #e3dfd6;">The misconception</div>
-    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:#e91e8c; padding-bottom:12px; border-bottom:2px solid #e3dfd6;">The reality</div>
+    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:var(--sm-foot-light); padding-bottom:12px; border-bottom:2px solid var(--sm-line);">The misconception</div>
+    <div style="font-family:var(--font-mono); font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:var(--sm-accent); padding-bottom:12px; border-bottom:2px solid var(--sm-line);">The reality</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're just a project manager with a new title</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">No assigning tasks or tracking deadlines. The team owns its commitments; the Scrum Master facilitates the process</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They're just a project manager with a new title</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">No assigning tasks or tracking deadlines. The team owns its commitments; the Scrum Master facilitates the process</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They run the sprint</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The team plans and runs the sprint. The Scrum Master removes blockers and keeps events useful, but doesn't direct the work</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They run the sprint</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">The team plans and runs the sprint. The Scrum Master removes blockers and keeps events useful, but doesn't direct the work</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're admin support for meetings</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The real job is coaching the team on agile practices and protecting focus, not admin work</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They're admin support for meetings</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">The real job is coaching the team on agile practices and protecting focus, not admin work</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They report on the team to management</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">Policing velocity or reporting failures upward would undermine trust and turn the role into surveillance</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They report on the team to management</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">Policing velocity or reporting failures upward would undermine trust and turn the role into surveillance</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They're only needed during the sprint</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">The job spans coaching, removing organisational obstacles, and improving team dynamics over time, well beyond the events</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They're only needed during the sprint</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">The job spans coaching, removing organisational obstacles, and improving team dynamics over time, well beyond the events</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">They make final decisions</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; border-bottom:1px solid #e3dfd6; display:flex; align-items:center; line-height:1.35;">Product decisions belong to the Product Owner; technical decisions belong to the developers. The Scrum Master has authority over neither</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">They make final decisions</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; border-bottom:1px solid var(--sm-line); display:flex; align-items:center; line-height:1.35;">Product decisions belong to the Product Owner; technical decisions belong to the developers. The Scrum Master has authority over neither</div>
 
-    <div class="reveal" style="font-size:25px; font-weight:500; color:#1a1c26; padding:15px 0; display:flex; align-items:center; line-height:1.35;">Anyone can do it as a side task</div>
-    <div class="reveal" style="font-size:23px; font-weight:300; color:#6a6e80; padding:15px 0; display:flex; align-items:center; line-height:1.35;">Facilitating well, coaching a team and spotting dysfunction take real skill. As a spare-time add-on, the role gets neglected</div>
+    <div class="reveal" style="font-size:25px; font-weight:500; color:var(--sm-ink); padding:15px 0; display:flex; align-items:center; line-height:1.35;">Anyone can do it as a side task</div>
+    <div class="reveal" style="font-size:23px; font-weight:300; color:var(--sm-muted); padding:15px 0; display:flex; align-items:center; line-height:1.35;">Facilitating well, coaching a team and spotting dysfunction take real skill. As a spare-time add-on, the role gets neglected</div>
   </div>
-  <div class="foot" style="color:#9a9d90;">
+  <div class="foot" style="color:var(--sm-foot-light);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>04 / 09</span>
   </div>
 </section>
 
 <!-- 5. NOT A SCRIBE / PA (dark statement) -->
-<section class="slide" data-label="Not a Scribe, Not a PA" data-speaker-notes="Land the point plainly: no authority over people, no admin role. This is the line stakeholders most need to hear." style="background:#111318; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
+<section class="slide" data-mode="dark" data-label="Not a Scribe, Not a PA" data-speaker-notes="Land the point plainly: no authority over people, no admin role. This is the line stakeholders most need to hear." style="background:var(--sm-dark-bg); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
   <div style="position:relative; max-width:1400px;">
-    <div style="font-family:var(--font-mono); font-size:100px; color:#e91e8c; line-height:0.5; height:50px;">"</div>
-    <p style="font-size:var(--type-title); font-weight:300; line-height:1.25; letter-spacing:-0.015em; color:#edecea; margin:0; text-wrap:balance;">Not a scribe. Not a PA. Not an order-taker.</p>
-    <p style="margin:44px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:#8b8fa8; max-width:1100px;">A Scrum Master has no authority to assign work or manage people. The role influences through coaching and facilitation, not through command.</p>
+    <div style="font-family:var(--font-mono); font-size:100px; color:var(--sm-accent); line-height:0.5; height:50px;">"</div>
+    <p style="font-size:var(--type-title); font-weight:300; line-height:1.25; letter-spacing:-0.015em; color:var(--sm-dark-head); margin:0; text-wrap:balance;">Not a scribe. Not a PA. Not an order-taker.</p>
+    <p style="margin:44px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:var(--sm-dark-body); max-width:1100px;">A Scrum Master has no authority to assign work or manage people. The role influences through coaching and facilitation, not through command.</p>
   </div>
-  <div class="foot" style="color:#4a4d60;">
+  <div class="foot" style="color:var(--sm-dark-foot);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>05 / 09</span>
   </div>
 </section>
 
 <!-- 6. INSPECT AND ADAPT (quote, vivid) -->
-<section class="slide" data-label="Inspect and Adapt" data-speaker-notes="Transition into the framework-agnostic argument: the framework exists to serve the team, not the reverse." style="background:#3a0a68; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
+<section class="slide" data-mode="dark" data-label="Inspect and Adapt" data-speaker-notes="Transition into the framework-agnostic argument: the framework exists to serve the team, not the reverse." style="background:var(--sm-v-bg); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); justify-content:center;">
   <div class="ghost" style="left:-40px; bottom:-40px; font-size:300px;">ADAPT</div>
   <div style="position:relative; max-width:1400px;">
-    <span class="eyebrow" style="color:#f06bb5;">THE PRINCIPLE</span>
+    <span class="eyebrow" style="color:var(--sm-accent-soft);">THE PRINCIPLE</span>
     <div class="rule"></div>
-    <p style="margin:36px 0 0; font-size:var(--type-title); font-weight:300; line-height:1.25; letter-spacing:-0.015em; color:#f5f0ff; text-wrap:balance;">The framework serves the team, <span style="color:#e91e8c; font-weight:500;">not the other way around.</span></p>
-    <p style="margin:40px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:#e7d9fb; max-width:1150px;">Scrum's own values ask us to inspect and adapt. Sticking rigidly to one framework's ceremonies, when the team's actual bottleneck sits elsewhere, works against that principle.</p>
+    <p style="margin:36px 0 0; font-size:var(--type-title); font-weight:300; line-height:1.25; letter-spacing:-0.015em; color:var(--sm-v-head); text-wrap:balance;">The framework serves the team, <span style="color:var(--sm-accent); font-weight:500;">not the other way around.</span></p>
+    <p style="margin:40px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:var(--sm-v-body); max-width:1150px;">Scrum's own values ask us to inspect and adapt. Sticking rigidly to one framework's ceremonies, when the team's actual bottleneck sits elsewhere, works against that principle.</p>
   </div>
-  <div class="foot" style="color:#a47fd0;">
+  <div class="foot" style="color:var(--sm-v-foot);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>06 / 09</span>
   </div>
 </section>
 
 <!-- 7. BORROWING FROM OTHER FRAMEWORKS (three-up light) -->
-<section class="slide" data-label="Borrowing From Other Frameworks" data-speaker-notes="Give concrete-but-conceptual examples of pulling practices from XP, Lean and Kanban based on what the team's data shows." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<section class="slide" data-mode="light" data-label="Borrowing From Other Frameworks" data-speaker-notes="Give concrete-but-conceptual examples of pulling practices from XP, Lean and Kanban based on what the team's data shows." style="background:var(--sm-paper); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:var(--sm-ink);">
   <span class="eyebrow">THE TOOLKIT</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">Borrowing what fits, from wherever it's from</h1>
+  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:var(--sm-ink);">Borrowing what fits, from wherever it's from</h1>
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:36px; flex-grow:1; margin-top:56px;">
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#e91e8c; background:color-mix(in oklch, #e91e8c 14%, transparent);">XP</span>
-      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">When quality is the bottleneck</h3>
-      <p style="margin:0; font-size:26px; line-height:1.5; color:#6a6e80; flex-grow:1;">Pairing, test-first development and a sustainable pace, brought in to raise engineering quality.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-accent); background:color-mix(in oklch, var(--sm-accent) 14%, transparent);">XP</span>
+      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">When quality is the bottleneck</h3>
+      <p style="margin:0; font-size:26px; line-height:1.5; color:var(--sm-muted); flex-grow:1;">Pairing, test-first development and a sustainable pace, brought in to raise engineering quality.</p>
     </div>
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#5f8c32; background:color-mix(in oklch, #7cb342 18%, transparent);">Lean</span>
-      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">When handoffs are the bottleneck</h3>
-      <p style="margin:0; font-size:26px; line-height:1.5; color:#6a6e80; flex-grow:1;">Value-stream thinking and waste reduction, brought in to shorten the path from idea to done.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-badge2); background:color-mix(in oklch, var(--sm-badge2-base) 18%, transparent);">Lean</span>
+      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">When handoffs are the bottleneck</h3>
+      <p style="margin:0; font-size:26px; line-height:1.5; color:var(--sm-muted); flex-grow:1;">Value-stream thinking and waste reduction, brought in to shorten the path from idea to done.</p>
     </div>
-    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid #e3dfd6;">
-      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#e91e8c;"></div>
-      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:#4e1280; background:color-mix(in oklch, #4e1280 12%, transparent);">Kanban</span>
-      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:#1a1c26;">When flow is the bottleneck</h3>
-      <p style="margin:0; font-size:26px; line-height:1.5; color:#6a6e80; flex-grow:1;">WIP limits, pull, and flow metrics, brought in to make delivery calmer and more predictable.</p>
+    <div style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:44px; border-radius:20px; background:#fff; border:1px solid var(--sm-line);">
+      <div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--sm-accent);"></div>
+      <span style="align-self:flex-start; font-size:18px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; padding:8px 16px; border-radius:8px; color:var(--sm-badge3); background:color-mix(in oklch, var(--sm-badge3) 12%, transparent);">Kanban</span>
+      <h3 style="margin:26px 0 10px; font-size:32px; font-weight:600; letter-spacing:-0.01em; color:var(--sm-ink);">When flow is the bottleneck</h3>
+      <p style="margin:0; font-size:26px; line-height:1.5; color:var(--sm-muted); flex-grow:1;">WIP limits, pull, and flow metrics, brought in to make delivery calmer and more predictable.</p>
     </div>
   </div>
-  <div class="foot" style="color:#9a9d90;">
+  <div class="foot" style="color:var(--sm-foot-light);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>07 / 09</span>
   </div>
 </section>
 
 <!-- 8. TEAM AGILE COACH (vivid definition) -->
-<section class="slide" data-label="Team Agile Coach" data-speaker-notes="Introduce the term the team uses for this approach, and its three tenets." style="background:#3a0a68; padding: var(--pad-top) var(--pad-x) var(--pad-bottom);">
+<section class="slide" data-mode="dark" data-label="Team Agile Coach" data-speaker-notes="Introduce the term the team uses for this approach, and its three tenets." style="background:var(--sm-v-bg); padding: var(--pad-top) var(--pad-x) var(--pad-bottom);">
   <div class="ghost" style="right:-30px; bottom:-60px; font-size:280px;">COACH</div>
-  <span class="eyebrow" style="color:#f06bb5;">THE APPROACH</span>
+  <span class="eyebrow" style="color:var(--sm-accent-soft);">THE APPROACH</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:80px; font-weight:600; letter-spacing:-0.025em; line-height:1.08; color:#f5f0ff; max-width:1300px;">Scrum Master by title. Team Agile Coach by practice.</h1>
-  <p style="margin:32px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:#e7d9fb; max-width:1150px; position:relative;">A framework-agnostic Scrum Master: same accountabilities to the team, a wider toolkit to draw on.</p>
+  <h1 style="margin:28px 0 0; font-size:80px; font-weight:600; letter-spacing:-0.025em; line-height:1.08; color:var(--sm-v-head); max-width:1300px;">Scrum Master by title. Team Agile Coach by practice.</h1>
+  <p style="margin:32px 0 0; font-size:var(--type-subtitle); font-weight:300; line-height:1.5; color:var(--sm-v-body); max-width:1150px; position:relative;">A framework-agnostic Scrum Master: same accountabilities to the team, a wider toolkit to draw on.</p>
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:64px; position:relative;">
     <div style="padding:32px 36px; border-radius:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);">
       <div style="font-size:26px; font-weight:600; color:#fff;">Fit over compliance</div>
-      <div style="font-size:22px; font-weight:300; color:#c9b8e8; margin-top:10px; line-height:1.5;">The right practice for this team, not the textbook one.</div>
+      <div style="font-size:22px; font-weight:300; color:var(--sm-v-card-body); margin-top:10px; line-height:1.5;">The right practice for this team, not the textbook one.</div>
     </div>
     <div style="padding:32px 36px; border-radius:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);">
       <div style="font-size:26px; font-weight:600; color:#fff;">Inspect and adapt</div>
-      <div style="font-size:22px; font-weight:300; color:#c9b8e8; margin-top:10px; line-height:1.5;">Practices earn their place by working, not by being canon.</div>
+      <div style="font-size:22px; font-weight:300; color:var(--sm-v-card-body); margin-top:10px; line-height:1.5;">Practices earn their place by working, not by being canon.</div>
     </div>
     <div style="padding:32px 36px; border-radius:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);">
       <div style="font-size:26px; font-weight:600; color:#fff;">Coach first</div>
-      <div style="font-size:22px; font-weight:300; color:#c9b8e8; margin-top:10px; line-height:1.5;">Grows the team's own judgment, rather than owning it for them.</div>
+      <div style="font-size:22px; font-weight:300; color:var(--sm-v-card-body); margin-top:10px; line-height:1.5;">Grows the team's own judgment, rather than owning it for them.</div>
     </div>
   </div>
-  <div class="foot" style="color:#a47fd0;">
+  <div class="foot" style="color:var(--sm-v-foot);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>08 / 09</span>
   </div>
 </section>
 
 <!-- 9. IN PRACTICE (closing, light) -->
-<section class="slide" data-label="In Practice" data-speaker-notes="Close with what this actually looks like week to week, and open the floor." style="background:#f7f6f2; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:#1a1c26;">
+<section class="slide" data-mode="light" data-label="In Practice" data-speaker-notes="Close with what this actually looks like week to week, and open the floor." style="background:var(--sm-paper); padding: var(--pad-top) var(--pad-x) var(--pad-bottom); color:var(--sm-ink);">
   <span class="eyebrow">IN PRACTICE</span>
   <div class="rule"></div>
-  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:#1a1c26;">What this looks like week to week</h1>
+  <h1 style="margin:28px 0 0; font-size:var(--type-title); font-weight:600; letter-spacing:-0.025em; color:var(--sm-ink);">What this looks like week to week</h1>
   <div style="display:flex; flex-direction:column; gap:0; margin-top:60px; flex-grow:1;">
-    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="width:14px; height:14px; border-radius:50%; background:#e91e8c; margin-top:12px; flex-shrink:0;"></span>
-      <span style="font-size:var(--type-body); font-weight:300; color:#1a1c26; line-height:1.5;">Events and artifacts get shaped around this team's actual bottleneck, not run because a guide says so.</span>
+    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="width:14px; height:14px; border-radius:50%; background:var(--sm-accent); margin-top:12px; flex-shrink:0;"></span>
+      <span style="font-size:var(--type-body); font-weight:300; color:var(--sm-ink); line-height:1.5;">Events and artifacts get shaped around this team's actual bottleneck, not run because a guide says so.</span>
     </div>
-    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="width:14px; height:14px; border-radius:50%; background:#e91e8c; margin-top:12px; flex-shrink:0;"></span>
-      <span style="font-size:var(--type-body); font-weight:300; color:#1a1c26; line-height:1.5;">Coaching conversations, not status chasing, are where most of the time goes.</span>
+    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="width:14px; height:14px; border-radius:50%; background:var(--sm-accent); margin-top:12px; flex-shrink:0;"></span>
+      <span style="font-size:var(--type-body); font-weight:300; color:var(--sm-ink); line-height:1.5;">Coaching conversations, not status chasing, are where most of the time goes.</span>
     </div>
-    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid #e3dfd6;">
-      <span style="width:14px; height:14px; border-radius:50%; background:#e91e8c; margin-top:12px; flex-shrink:0;"></span>
-      <span style="font-size:var(--type-body); font-weight:300; color:#1a1c26; line-height:1.5;">Practices from XP, Lean or Kanban show up when the evidence points that way, never by default.</span>
+    <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0; border-bottom:1px solid var(--sm-line);">
+      <span style="width:14px; height:14px; border-radius:50%; background:var(--sm-accent); margin-top:12px; flex-shrink:0;"></span>
+      <span style="font-size:var(--type-body); font-weight:300; color:var(--sm-ink); line-height:1.5;">Practices from XP, Lean or Kanban show up when the evidence points that way, never by default.</span>
     </div>
     <div style="display:flex; align-items:flex-start; gap:32px; padding:28px 0;">
-      <span style="width:14px; height:14px; border-radius:50%; background:#e91e8c; margin-top:12px; flex-shrink:0;"></span>
-      <span style="font-size:var(--type-body); font-weight:300; color:#1a1c26; line-height:1.5;">The team ends up owning its own process; the goal is to need this role less over time, not more.</span>
+      <span style="width:14px; height:14px; border-radius:50%; background:var(--sm-accent); margin-top:12px; flex-shrink:0;"></span>
+      <span style="font-size:var(--type-body); font-weight:300; color:var(--sm-ink); line-height:1.5;">The team ends up owning its own process; the goal is to need this role less over time, not more.</span>
     </div>
   </div>
-  <div class="foot" style="color:#9a9d90;">
+  <div class="foot" style="color:var(--sm-foot-light);">
     <div class="mb"><span class="chip">SM</span>Scrum Master · Team Agile Coach</div>
     <span>09 / 09</span>
   </div>
